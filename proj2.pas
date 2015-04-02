@@ -1,25 +1,10 @@
 program project2;
-uses crt;
+uses crt, types;
 
-type
-variable_info = record
-    var_name: string;
-    var_type: string;
-end;
-
-function_info = record
-    func_name: string;
-    num_params: integer;
-    params: array of variable_info;
-    num_locals: integer;
-    locals: array of variable_info;
-    ret: variable_info;
-end;
-
-activation_record = record
-
-end;
+var
+rec: activation_record;
 
 begin
-    writeln('hi');
+    rec.control_link := 123;
+    writeln(rec.control_link);
 end.
