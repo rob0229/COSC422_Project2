@@ -11,5 +11,5 @@ begin
     writeln(rec.control_link);
     displayMenu();
     readln(choice);
-    writeln(choice);
+    writeln('You chose: ', choice);
 end.
