@@ -1,9 +1,9 @@
 unit menu;
 interface
-procedure displayMenu();
+procedure display_menu();
 
 implementation 
-procedure displayMenu();
+procedure display_menu();
 	begin
 		writeln('Choose an option');
 		writeln('1- Create a function');

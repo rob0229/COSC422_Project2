@@ -5,7 +5,7 @@ type
 variable_info = record
     var_name: string;
     var_type: string;
-    var_value: integer;
+    var_value: string;
 end;
 
 function_info = record
@@ -18,8 +18,8 @@ function_info = record
 end;
 
 activation_record = record
-    control_link: integer;
-    access_link: integer;
+    control_link: ^activation_record;
+    access_link: ^activation_record;
     return_address: integer;
     ret: variable_info;
     num_locals: integer;
