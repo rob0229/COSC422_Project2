@@ -60,6 +60,7 @@ begin
     			2 : 
     				begin
     					writeln('You chose to call a function: ');
+                        stack[stack_size] := callFunction(func_array, num_functions);
     				end;
                 {* return function *}
     			3: 

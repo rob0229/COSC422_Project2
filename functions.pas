@@ -1,12 +1,14 @@
 unit functions;
 interface
 uses types;
-var i, num_params, num_locals: integer;
+var i, num_params, num_locals, choice: integer;
 var temp_func: function_info;
 var func_name, param_name, param_dataType, local_name, local_dataType: string;
+var return_record : activation_record;
 
 procedure printStack(stack: array of activation_record; var size: integer);
 function createFunction(): function_info;
+function callFunction(func_array: array of function_info; var num_functions: integer): activation_record;
 
 implementation
 
@@ -82,21 +84,20 @@ procedure printStack(stack: array of activation_record; var size: integer);
  		createFunction := temp_func;
  	end;
 
+function callFunction(func_array: array of function_info; var num_functions: integer ): activation_record;
+	begin
+		writeln('Enter the number for the function you want to call');
+		for i := 0 to (num_functions - 1) do
+			begin
+				writeln(i:5, ' ', func_array[i].func_name );
+			end;
+		readln(choice);
+
+		writeln('you chose ', choice);
+
+		callFunction := return_record;
+	end;
+
+
+
 end.
-
-
-
-
-
-
-
-{*
-control_link: ^activation_record;
-    access_link: ^activation_record;
-    return_address: integer;
-    ret: variable_info;
-    num_locals: integer;
-    locals: array of variable_info;
-    temporary: variable_info;    
-
- *}
