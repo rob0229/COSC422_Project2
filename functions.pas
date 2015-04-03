@@ -1,9 +1,9 @@
 unit functions;
 interface
 uses types;
-var i: integer;
+var i, num_params, num_locals: integer;
 var temp_func: function_info;
-var func_name: string;
+var func_name, param_name, param_dataType, local_name, local_dataType: string;
 
 procedure printStack(stack: array of activation_record; var size: integer);
 function createFunction(): function_info;
@@ -34,9 +34,10 @@ procedure printStack(stack: array of activation_record; var size: integer);
 				writeln('| Var ', stack[size-1].locals[i].var_name:20, ' | ', stack[size-1].locals[i].var_value:20, ' |');
 				writeln('-------------------------------------------');
 			end;
-
+{*
 		writeln('| Return Address':20, ' | ', stack[size-1].access_link^.name:20,' |');
 		writeln('-------------------------------------------');
+*}
 			
 		end;
 
@@ -45,6 +46,39 @@ procedure printStack(stack: array of activation_record; var size: integer);
  		writeln('Enter the function Name:');
  		readln(func_name);
  		temp_func.func_name := func_name;
+
+ 		writeln('Enter the number of parameters:');
+ 		readln(num_params);
+ 		temp_func.num_params := num_params;
+ 		setlength(temp_func.params, num_params);
+ 		for i := 0 to (num_params - 1) do 
+		begin
+			writeln('Enter the variable name for parameter ', i+1);
+			readln(param_name);
+			writeln('Enter the data type of ', param_name);
+			readln(param_dataType);
+			
+			temp_func.params[i].var_name := param_name;
+			temp_func.params[i].var_type := param_dataType;
+		end;
+
+
+
+ 		writeln('Enter the number of local variables: ');
+ 		readln(num_locals);
+ 		setlength(temp_func.locals, num_locals);
+ 		temp_func.num_locals := num_locals;
+ 		for i := 0 to (num_locals - 1) do 
+		begin
+			writeln('Enter the variable name for local var', i+1);
+			readln(local_name);
+			writeln('Enter the data type of ', local_name);
+			readln(local_dataType);
+			
+			temp_func.params[i].var_name := local_name;
+			temp_func.params[i].var_type := local_dataType;
+		end;
+
  		createFunction := temp_func;
  	end;
 

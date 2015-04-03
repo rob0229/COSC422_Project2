@@ -14,6 +14,8 @@ function_info = record
     params: array of variable_info;
     num_locals: integer;
     locals: array of variable_info;
+    
+    {*This may be the wrong data type!!!!!*}
     ret: variable_info;
 end;
 
