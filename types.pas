@@ -18,6 +18,7 @@ function_info = record
 end;
 
 activation_record = record
+    name: string;
     control_link: ^activation_record;
     access_link: ^activation_record;
     return_address: integer;
