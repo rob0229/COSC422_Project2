@@ -56,11 +56,13 @@ begin
                         func_array[num_functions - 1] := createFunction();
                         writeln('returned from createFunction');   
     				end;
-                {*Call a function*}
+                {*Simulate a function call*}
     			2 : 
     				begin
     					writeln('You chose to call a function: ');
-                        stack[stack_size] := callFunction(func_array, num_functions);
+                        stack_size := stack_size + 1;
+                        {* add the activation record for called function to the stack *}
+                        stack := callFunction(func_array, stack, num_functions, stack_size);
     				end;
                 {* return function *}
     			3: 
