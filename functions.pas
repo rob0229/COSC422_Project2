@@ -117,26 +117,43 @@ function callFunction(func_array: array of function_info; stack: activation_reco
                 new_record.locals[i].var_value := param_value;    
             end;
 
-        {* get the simulated return value of the function call *}
-        writeln('Enter a value for the function to return');
-        readln(return_val);
-        new_record.ret.var_value := return_val; 
+      
 		
 
 		{* Add the new activation record to the stack *}
-		setlength(stack, stack_size);
+		setlength(new_stack, stack_size);
+		 writeln('made it to here');
 		new_stack[stack_size - 1] := new_record;
+ writeln('here 1');
 
 		{*set control_link, access_link, and return pointers*}
-        new_stack[stack_size - 1].control_link^ := stack[stack_size - 2];
-        new_stack[stack_size - 1].access_link^ := stack[0];
+		if (stack_size > 2) then
+			begin
+		    	new_stack[stack_size - 1].control_link^ := new_stack[stack_size - 2];
+
+writeln('here 2');
+
+			end
+		else
+			begin
+
+writeln('here 3: ', new_stack[stack_size - 1].name);
+
+				 new_stack[stack_size - 1].control_link^ := new_stack[0];
+			end;
+
+writeln('here 4');
+
+		new_stack[stack_size - 1].access_link^ := new_stack[0];
         new_stack[stack_size - 1].return_address := stack_size - 1;
+
+ writeln('here 5');
 
         {* Set the temp values *}
         new_stack[stack_size - 2].ret.var_name := new_stack[stack_size - 1].ret.var_name;
         new_stack[stack_size - 2].ret.var_type := new_stack[stack_size - 1].ret.var_type;
 
-
+ writeln('here 6');
        
         	{* Return the new stack *}
             callFunction := new_stack;
@@ -147,7 +164,11 @@ function functionReturn( func_array: array of function_info; stack: activation_r
 	begin 
 		return_stack := stack;
 		{* This is the simulated function return*}
-        return_stack[stack_size - 2].ret.var_value := return_stack[stack_size - 1].ret.var_value;	
-	end;
+		{* get the simulated return value of the function call *}
+        writeln('Enter a value for the function to return');
+        readln(return_val);
+        return_stack[stack_size - 2].ret.var_value := return_stack[stack_size - 1].ret.var_value;
+        functionReturn := return_stack;
+        	end;
 
 end.
