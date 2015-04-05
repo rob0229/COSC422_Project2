@@ -8,8 +8,6 @@ variable_info = record
     var_value: string;
 end;
 
-
-
 function_info = record
     func_name: string;
     num_params: integer;
@@ -34,6 +32,6 @@ end;
 
 type
     activation_record_array = array of activation_record;
-
+    
 implementation
 end.
