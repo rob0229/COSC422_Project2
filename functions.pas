@@ -19,43 +19,43 @@ implementation
 procedure printStack(stack: activation_record_array; var size: integer);
     begin
         writeln('---------------------------------------------------');
-        writeln('|     ',' Function  Name ':20, ' | ', stack[size-1].name:20, ' |');
+        writeln('|  ',' Function  Name ':20, ' | ', stack[size-1].name:20, ' |');
         writeln('---------------------------------------------------');
 
         {* Only displays this information for stack items that are not Global variables, (not stack[0])*}
         if stack[size-1].control_link <> -1 then
             begin
-                writeln('|     ', 'control_link name':20, ' | ', stack[stack[size-1].control_link].name:20, ' |');
+                writeln('|  ', 'control_link name':20, ' | ', stack[stack[size-1].control_link].name:20, ' |');
                 writeln('---------------------------------------------------');
             end;
         if stack[size-1].access_link <> -1 then
             begin
-                writeln('|     ', 'access_link name':20, ' | ', stack[stack[size-1].access_link].name:20, ' |');
+                writeln('|  ', 'access_link name':20, ' | ', stack[stack[size-1].access_link].name:20, ' |');
                 writeln('---------------------------------------------------');
             end;
         {* Displays all the variables within the function *}
 
-        writeln('| num_locals':20, ' | ', stack[size-1].num_locals:20,' |');
+        writeln('|  ', ' num_locals':20, ' | ', stack[size-1].num_locals:20,' |');
         writeln('---------------------------------------------------');
 
 
         for i := 0 to (stack[size-1].num_locals-1) do
             begin
             
-                writeln('|     ', stack[size-1].locals[i].var_name:20, ' | ', stack[size-1].locals[i].var_value:20, ' |');
+                writeln('|  ', stack[size-1].locals[i].var_name:20, ' | ', stack[size-1].locals[i].var_value:20, ' |');
                 writeln('---------------------------------------------------');
             end;
 
-        writeln('| Return Address':20, ' | ', stack[size-1].return_address:20,' |');
+        writeln('|  ',' Return Address':20, ' | ', stack[size-1].return_address:20,' |');
         writeln('---------------------------------------------------');
 
-        writeln('| Return Type':20, ' | ', stack[size-1].return_type:20,' |');
+        writeln('|  ',' Return Type':20, ' | ', stack[size-1].return_type:20,' |');
         writeln('---------------------------------------------------');
 
-        writeln('| temporary':20, ' | ', stack[size-1].temporary.var_name:20,' |');
+        writeln('|  ',' temporary':20, ' | ', stack[size-1].temporary.var_name:20,' |');
         writeln('---------------------------------------------------');
 
-        writeln('| offset':20, ' | ', stack[size-1].offset:20,' |');
+        writeln('|  ', 'offset':20, ' | ', stack[size-1].offset:20,' |');
         writeln('---------------------------------------------------');
 
 {*
@@ -68,11 +68,6 @@ procedure printStack(stack: activation_record_array; var size: integer);
         locals: array of variable_info;
         temporary: variable_info;
         offset: integer;
-
-
-
-
-
 *}
             
         end;
