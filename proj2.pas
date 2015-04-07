@@ -6,8 +6,7 @@ var
     
     stack: array of activation_record;
     stack_size: integer;
-    
-    functions: array of function_info;
+    func_array: array of function_info;
     num_functions: integer;
 
 {* Main program execution*}
@@ -31,9 +30,9 @@ begin
         begin
             writeln('Enter the variable name for global var ', i+1);
             readln(stack[0].locals[i].var_name);
-            writeln('Enter the data type of ', name);
+            writeln('Enter the data type of ', stack[0].locals[i].var_name);
             readln(stack[0].locals[i].var_type);
-            writeln('Enter a value for ', name);
+            writeln('Enter a value for ', stack[0].locals[i].var_name);
             readln(stack[0].locals[i].var_value);
         end;
 
@@ -48,8 +47,8 @@ begin
                     begin
                         writeln('You chose to create a function: ');
                         num_functions := num_functions + 1;
-                        setlength(functions, num_functions);
-                        functions[num_functions - 1] := createFunction();
+                        setlength(func_array, num_functions);
+                        func_array[num_functions - 1] := createFunction();
                         writeln('returned from createFunction');   
                     end;
                 {*Simulate a function call*}
@@ -58,7 +57,7 @@ begin
                         writeln('You chose to call a function: ');
                         stack_size := stack_size + 1;
                         {* add the activation record for called function to the stack *}
-                        stack := callFunction(functions, stack, num_functions, stack_size);
+                        stack := callFunction(func_array, stack, num_functions, stack_size);
                     end;
                 {* return function *}
                 3: 

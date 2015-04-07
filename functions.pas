@@ -7,7 +7,7 @@ var new_record : activation_record;
 var new_stack, return_stack: array of activation_record;
 
 procedure printStack(stack: activation_record_array; var size: integer);
-procedure createFunction(func: ^function_info);
+function createFunction(): function_info ;
 function callFunction(func_array: function_info_array; stack: activation_record_array; var num_functions: integer; var stack_size: integer ): activation_record_array;
 function functionReturn(func_array: function_info_array; stack: activation_record_array; var num_functions: integer; var stack_size: integer): activation_record_array;
 
@@ -34,15 +34,45 @@ procedure printStack(stack: activation_record_array; var size: integer);
                 writeln('---------------------------------------------------');
             end;
         {* Displays all the variables within the function *}
+
+        writeln('| num_locals':20, ' | ', stack[size-1].num_locals:20,' |');
+        writeln('---------------------------------------------------');
+
+
         for i := 0 to (stack[size-1].num_locals-1) do
             begin
             
                 writeln('|     ', stack[size-1].locals[i].var_name:20, ' | ', stack[size-1].locals[i].var_value:20, ' |');
                 writeln('---------------------------------------------------');
             end;
-{*
-        writeln('| Return Address':20, ' | ', stack[size-1].access_link^.name:20,' |');
+
+        writeln('| Return Address':20, ' | ', stack[size-1].return_address:20,' |');
         writeln('---------------------------------------------------');
+
+        writeln('| Return Type':20, ' | ', stack[size-1].return_type:20,' |');
+        writeln('---------------------------------------------------');
+
+        writeln('| temporary':20, ' | ', stack[size-1].temporary.var_name:20,' |');
+        writeln('---------------------------------------------------');
+
+        writeln('| offset':20, ' | ', stack[size-1].offset:20,' |');
+        writeln('---------------------------------------------------');
+
+{*
+        name: string;
+        control_link: integer;
+        access_link: integer;
+        return_address: integer;
+        return_type: string;
+        num_locals: integer;
+        locals: array of variable_info;
+        temporary: variable_info;
+        offset: integer;
+
+
+
+
+
 *}
             
         end;
@@ -82,14 +112,12 @@ function createFunction() : function_info;
 
         {* get the function return type/value *}
         writeln('Enter the return type of the function');
-        readln(func.ret.var_type);
-        writeln('Enter the return value of the function');
-        readln(func.ret.var_value);
+        readln(func.return_type);
+        
         
         createFunction := func;
     end;
 
-{* haven't even looked at this function yet -kevin *}
 function callFunction(func_array: function_info_array; stack: activation_record_array; var num_functions: integer; var stack_size: integer ): activation_record_array;
     var
         i, choice: integer;
@@ -108,6 +136,7 @@ function callFunction(func_array: function_info_array; stack: activation_record_
 
         {* Update the new activation_record information from the users choice*}
         new_record.name := func_array[choice].func_name; 
+        new_record.return_type := func_array[choice].return_type;
 
         {* get the function call argument values and assign to the local variables of the new activation_record *}
         setlength(new_record.locals, func_array[choice].num_params);
@@ -128,7 +157,7 @@ function callFunction(func_array: function_info_array; stack: activation_record_
         {*set control_link, access_link, and return pointers*}
         if (stack_size > 2) then
             begin
-                new_stack[stack_size - 1].control_link^ := new_stack[stack_size - 2];
+                new_stack[stack_size - 1].control_link := stack_size - 2;
             end
         else
             begin
@@ -136,15 +165,13 @@ function callFunction(func_array: function_info_array; stack: activation_record_
                 writeln('here 3: ', new_stack[stack_size - 1].name);
                 writeln(new_stack[0].name);
 
-                new_stack[stack_size - 1].control_link^ := new_stack[0];
+                new_stack[stack_size - 1].control_link := 0;
             end;
-        new_stack[stack_size - 1].access_link^ := new_stack[0];
+        new_stack[stack_size - 1].access_link := 0;
         new_stack[stack_size - 1].return_address := stack_size - 1;
 
-        {* Set the temp values *}
-        new_stack[stack_size - 2].ret.var_name := new_stack[stack_size - 1].ret.var_name;
-        new_stack[stack_size - 2].ret.var_type := new_stack[stack_size - 1].ret.var_type;
-
+        new_stack[stack_size - 2].temporary.var_name := new_stack[stack_size - 1].name + '()';
+        new_stack[stack_size - 2].temporary.var_type := new_stack[stack_size - 1].return_type;
 
         {* Return the new stack *}
         callFunction := new_stack;
@@ -162,7 +189,7 @@ function functionReturn( func_array: function_info_array; stack: activation_reco
         {* get the simulated return value of the function call *}
         writeln('Enter a value for the function to return');
         readln(return_val);
-        return_stack[stack_size - 2].ret.var_value := return_stack[stack_size - 1].ret.var_value;
+        return_stack[stack_size - 2].temporary.var_value := return_val;
         functionReturn := return_stack;
     end;
     
@@ -171,16 +198,16 @@ function functionReturn( func_array: function_info_array; stack: activation_reco
 {* calculate size based on type: int = 4, char = 1, everything else = 0 *}
 function calculateTypeSize(var_type: string): integer;
     begin
-        calculateTypeSize := 0
+        calculateTypeSize := 0;
     
-        if var_type == "int" or var_type == "integer" then
+        if (var_type = 'int') OR (var_type = 'integer') then
             calculateTypeSize := 4
-        else if var_type == "char" then
+        else if var_type = 'char' then
             calculateTypeSize := 1;
     end;
 
 {* figure out the size of an activation record *}
-function calculateActivationRecordSize(rec: ^activation_record): integer;
+function calculateActivationRecordSize(rec: activation_record): integer;
     var
         i, size: integer;
     
@@ -194,12 +221,12 @@ function calculateActivationRecordSize(rec: ^activation_record): integer;
     temporary: variable_info;  *}
     begin
         size := 4 + 4 + 4; {* control_link + access_link + return_address *}
-        size := size + calculateTypeSize(ret^.var_type);
-        for i := 0 to rec^.num_locals - 1 do
+        size := size + calculateTypeSize(rec.return_type);
+        for i := 0 to rec.num_locals - 1 do
             begin
-                size := size + calculateTypeSize(ret^.locals[i].var_type);
+                size := size + calculateTypeSize(rec.locals[i].var_type);
             end;
-        size := size + calculateTypeSize(ret^.temporary.var_type);
+        size := size + calculateTypeSize(rec.temporary.var_type);
         
         calculateActivationRecordSize := size;
     end;

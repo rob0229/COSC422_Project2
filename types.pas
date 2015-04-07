@@ -14,9 +14,7 @@ type
         params: array of variable_info;
         num_locals: integer;
         locals: array of variable_info;
-
-        {*This may be the wrong data type!!!!!*}
-        ret: variable_info;
+        return_type: string;
     end;
 
     activation_record = record
@@ -24,7 +22,7 @@ type
         control_link: integer;
         access_link: integer;
         return_address: integer;
-        ret: variable_info;
+        return_type: string;
         num_locals: integer;
         locals: array of variable_info;
         temporary: variable_info;
