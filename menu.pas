@@ -15,7 +15,6 @@ procedure display_menu();
         writeln('2- Call Function');
         writeln('3- Simulate Function Return');
         writeln('4- Print Stack');
-        writeln('5- Reset Simulation');
-        writeln('6- Exit');
+        writeln('5- Exit');
     end;
 end.

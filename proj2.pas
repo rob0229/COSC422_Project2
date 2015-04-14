@@ -64,37 +64,30 @@ procedure runLoop();
 
         choice := StrToIntDef(input, -1);
 
-        while choice <> 6 do
+        while choice <> 5 do
             begin
                 case choice of 
                     {* Create a function *}
                     1 : 
                         begin
-                            writeln('You chose to create a function: ');
                             num_functions := num_functions + 1;
                             setlength(func_array, num_functions);
-                            func_array[num_functions - 1] := createFunction();
-                            writeln('returned from createFunction');   
+                            func_array[num_functions - 1] := createFunction();   
                         end;
                     {*Simulate a function call*}
                     2 : 
                         begin
-                            writeln('You chose to call a function: ');
                             {* add the activation record for called function to the stack *}
                             callFunction();
-                            writeln('returned from callFunction');
                         end;
                     {* return function *}
                     3: 
                         begin
-                            writeln('You chose to simulate the return of a function: ');
                             functionReturn();
-                            writeln('returned from functionReturn');
                         end;
                     {* Print the stack *}    
                     4 : 
                         begin
-                            writeln('You chose to print the stack: ');
                             numprint := -1;
                             while numprint = -1 do
                                 begin
@@ -103,13 +96,6 @@ procedure runLoop();
                                     numprint := StrToIntDef(input, -1);
                                 end;
                             printStack(numprint);
-                            writeln('returned from printStack');
-                        end;
-                    {* Reset the Simulation *}
-                    5 : 
-                        begin
-                            writeln('You chose to reset the simulation: ');
-                            exit; {* exit function, main loop restarts it *}
                         end;
                     else 
                         writeln('That is not a valid choice');

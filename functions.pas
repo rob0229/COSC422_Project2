@@ -180,6 +180,15 @@ procedure callFunction();
         input: string;
         
     begin
+
+        if num_functions = 0 then 
+            begin
+                writeln();
+                writeln('ERROR ****** No functions exist to call!!! ******');
+                writeln();
+                exit;
+            end;
+
         {*Display all the functions and ask the user to choose one*}
         for i := 0 to (num_functions - 1) do
             begin
@@ -245,7 +254,6 @@ procedure callFunction();
         {* Add the new activation record to the stack *}
         stack_size := stack_size + 1;
         setlength(stack, stack_size);
-        writeln('made it to here');
         stack[stack_size - 1] := new_record;
         
         {* update stack pointer *}
@@ -260,7 +268,9 @@ procedure functionReturn();
         {* skip if no functions *}
         if stack_size <= 1 then
             begin
-                writeln('No functions on stack!');
+                writeln();
+                writeln('ERROR ****** No functions on stack!!! ******');
+                writeln();
                 exit;
             end;
     
