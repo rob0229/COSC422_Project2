@@ -15,21 +15,37 @@ procedure printActivationRecord(var rec: activation_record);
     var
         i: integer;
     begin
-        writeln('===================================================');
         writeln('   ','Function name:':20, ' ', rec.name);
-        writeln('   ','Stack address:':20, ' ', (stack_base - rec.offset));
+        writeln('   ','Stack address:':20, ' ', (stack_base + rec.offset));
         writeln('   ','Record size:':20, ' ', rec.size);
         writeln('---------------------------------------------------');
 
         {* Only displays this information for stack items that are not Global variables, (not stack[0])*}
         if rec.control_link <> -1 then
             begin
-                writeln('   ', 'control_link:':20, ' ', stack[rec.control_link].offset, ' (', stack[rec.control_link].name, ')');
-                writeln('   ', 'access_link':20, ' ', stack[rec.access_link].offset, ' (', stack[rec.access_link].name, ')');
-                writeln('   ', 'return_address:':20, ' ', func_array[rec.return_address].code_address, ' (', func_array[rec.return_address].func_name, ')');
+                writeln('   ', 'control_link:':20, ' ', (stack_base + stack[rec.control_link].offset), ' (', stack[rec.control_link].name, ')');
+                writeln('   ', 'access_link:':20, ' ', (stack_base + stack[rec.access_link].offset), ' (', stack[rec.access_link].name, ')');
+                if rec.return_address = -1 then
+                    begin
+                        writeln('   ', 'return_address:':20, ' 0 (no previous function to return to)');
+                        writeln('   ', 'return_value_addr:':20, ' 0 (no previous function to return to)');
+                    end
+                else
+                    begin
+                        writeln('   ', 'return_address:':20, ' ', func_array[rec.return_address].code_address, ' (', func_array[rec.return_address].func_name, ')');
+                        writeln('   ', 'return_value_addr:':20, ' ', (stack_base + stack[rec.control_link].offset + 12), ' (', stack[rec.control_link].name, ')');
+                    end;
+                    
+                    
                 writeln('---------------------------------------------------');
             end;
-
+            
+        {* don't display temporary if globals *}
+        if rec.control_link <> -1 then
+            begin
+                writeln('   ','temporary:':20, ' ', rec.temporary.var_type, ' ', rec.temporary.var_name, ' = ', rec.temporary.var_value);
+            end;
+            
         {* Displays all the variables within the function *}
         writeln('   ', '# of locals/args:':20, ' ', rec.num_locals);
         for i := 0 to (rec.num_locals-1) do
@@ -37,11 +53,9 @@ procedure printActivationRecord(var rec: activation_record);
                 writeln('   ', ('local ' + IntToStr(i+1) + ':'):20, ' ', rec.locals[i].var_type, ' ', rec.locals[i].var_name, ' = ', rec.locals[i].var_value);
             end;
 
-        {* don't display temporary if globals *}
-        if rec.control_link <> -1 then
-            begin
-                writeln('   ','temporary:':20, ' ', rec.temporary.var_type, ' ', rec.temporary.var_name, ' = ', rec.temporary.var_value);
-            end;
+        writeln('===================================================');
+        writeln('***************************************************');
+        writeln('===================================================');
     end;
 
 {* print up to 'numprint' activation records *}
@@ -49,16 +63,19 @@ procedure printStack(numprint: integer);
     var
         i: integer;
     begin
-        writeln('Stack/env pointer: ':25, (stack_base - stack[stack_pointer].offset), ' (', stack[stack_pointer].name, ')');
+        writeln('Registers:');
+        writeln('Environment pointer:':25, ' ', (stack_base + stack[stack_pointer].offset), ' (', stack[stack_pointer].name, ')');
         if instruction_pointer = -1 then
             begin
-                writeln('Instruction pointer: ':25, 'No code run yet!')
+                writeln('Program counter:':25, ' 0 (no function running)');
             end
         else
             begin
-                writeln('Instruction pointer: ':25, func_array[instruction_pointer].code_address, ' (', func_array[instruction_pointer].func_name, ')');
+                writeln('Program counter:':25, ' ', func_array[instruction_pointer].code_address, ' (', func_array[instruction_pointer].func_name, ')');
             end;
             
+        writeln('===================================================');
+        writeln(' Top of stack:');
         writeln('===================================================');
         
         {* start looping backwards through stack *}
@@ -245,7 +262,7 @@ procedure functionReturn();
         {* get the simulated return value of the function call if it isn't void *}
         if stack[stack_size - 1].return_type <> 'void' then
             begin
-                writeln('Enter a value for the function to return');
+                writeln('Enter a ', stack[stack_size - 1].return_type, ' value for the function to return: ');
                 readln(return_val);
                 stack[stack_size - 2].temporary.var_value := return_val;
             end;
@@ -264,6 +281,6 @@ procedure functionReturn();
 {* figure out the size of an activation record *}
 function calculateActivationRecordSize(var rec: activation_record): integer;
     begin
-        calculateActivationRecordSize := rec.num_locals * 4 + 4 + 4 + 4 + 4; {* control_link + access_link + return_address + temporary *}
+        calculateActivationRecordSize := rec.num_locals * 4 + 4 + 4 + 4 + 4 + 4; {* control_link + access_link + return_address + temporary + return result address*}
     end;
 end.
