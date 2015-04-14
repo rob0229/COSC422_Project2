@@ -14,6 +14,7 @@ type
         params: array of variable_info;
         num_locals: integer;
         locals: array of variable_info;
+        code_address: LongInt;
         return_type: string;
     end;
 
@@ -27,10 +28,21 @@ type
         locals: array of variable_info;
         temporary: variable_info;
         offset: integer;
+        size: integer;
     end;
 
     activation_record_array = array of activation_record;
     function_info_array = array of function_info;
+
+var
+    stack: array of activation_record;
+    stack_size: integer;
+    func_array: array of function_info;
+    num_functions: integer;
+    
+    instruction_pointer: integer;
+    stack_pointer: integer;
+    stack_base: LongInt;
 
 implementation
 

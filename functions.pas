@@ -1,228 +1,269 @@
 unit functions;
 interface
-uses types;
+uses sysutils, types;
 
-var i, num_params, num_locals, choice: integer;
-var new_record : activation_record;
-var new_stack, return_stack: array of activation_record;
-
-procedure printStack(stack: activation_record_array; var size: integer);
+procedure printStack(numprint: integer);
 function createFunction(): function_info ;
-function callFunction(func_array: function_info_array; stack: activation_record_array; var num_functions: integer; var stack_size: integer ): activation_record_array;
-function functionReturn(func_array: function_info_array; stack: activation_record_array; var num_functions: integer; var stack_size: integer): activation_record_array;
+procedure callFunction();
+procedure functionReturn();
 
-function calculateActivationRecordSize(rec: activation_record): integer;
+function calculateActivationRecordSize(var rec: activation_record): integer;
 
 implementation
 
-{* haven't even looked at this function yet -kevin *}
-procedure printStack(stack: activation_record_array; var size: integer);
+procedure printActivationRecord(var rec: activation_record);
+    var
+        i: integer;
     begin
-        writeln('---------------------------------------------------');
-        writeln('|  ',' Function  Name ':20, ' | ', stack[size-1].name:20, ' |');
+        writeln('===================================================');
+        writeln('   ','Function name:':20, ' ', rec.name);
+        writeln('   ','Stack address:':20, ' ', (stack_base - rec.offset));
+        writeln('   ','Record size:':20, ' ', rec.size);
         writeln('---------------------------------------------------');
 
         {* Only displays this information for stack items that are not Global variables, (not stack[0])*}
-        if stack[size-1].control_link <> -1 then
+        if rec.control_link <> -1 then
             begin
-                writeln('|  ', 'control_link name':20, ' | ', stack[stack[size-1].control_link].name:20, ' |');
+                writeln('   ', 'control_link:':20, ' ', stack[rec.control_link].offset, ' (', stack[rec.control_link].name, ')');
+                writeln('   ', 'access_link':20, ' ', stack[rec.access_link].offset, ' (', stack[rec.access_link].name, ')');
+                writeln('   ', 'return_address:':20, ' ', func_array[rec.return_address].code_address, ' (', func_array[rec.return_address].func_name, ')');
                 writeln('---------------------------------------------------');
             end;
-        if stack[size-1].access_link <> -1 then
-            begin
-                writeln('|  ', 'access_link name':20, ' | ', stack[stack[size-1].access_link].name:20, ' |');
-                writeln('---------------------------------------------------');
-            end;
+
         {* Displays all the variables within the function *}
-
-        writeln('|  ', ' num_locals':20, ' | ', stack[size-1].num_locals:20,' |');
-        writeln('---------------------------------------------------');
-
-
-        for i := 0 to (stack[size-1].num_locals-1) do
+        writeln('   ', '# of locals/args:':20, ' ', rec.num_locals);
+        for i := 0 to (rec.num_locals-1) do
             begin
-            
-                writeln('|  ', stack[size-1].locals[i].var_name:20, ' | ', stack[size-1].locals[i].var_value:20, ' |');
-                writeln('---------------------------------------------------');
+                writeln('   ', ('local ' + IntToStr(i+1) + ':'):20, ' ', rec.locals[i].var_type, ' ', rec.locals[i].var_name, ' = ', rec.locals[i].var_value);
             end;
 
-        writeln('|  ',' Return Address':20, ' | ', stack[size-1].return_address:20,' |');
-        writeln('---------------------------------------------------');
+        {* don't display temporary if globals *}
+        if rec.control_link <> -1 then
+            begin
+                writeln('   ','temporary:':20, ' ', rec.temporary.var_type, ' ', rec.temporary.var_name, ' = ', rec.temporary.var_value);
+            end;
+    end;
 
-        writeln('|  ',' Return Type':20, ' | ', stack[size-1].return_type:20,' |');
-        writeln('---------------------------------------------------');
-
-        writeln('|  ',' temporary':20, ' | ', stack[size-1].temporary.var_name:20,' |');
-        writeln('---------------------------------------------------');
-
-        writeln('|  ', 'offset':20, ' | ', stack[size-1].offset:20,' |');
-        writeln('---------------------------------------------------');
-
-{*
-        name: string;
-        control_link: integer;
-        access_link: integer;
-        return_address: integer;
-        return_type: string;
-        num_locals: integer;
-        locals: array of variable_info;
-        temporary: variable_info;
-        offset: integer;
-*}
+{* print up to 'numprint' activation records *}
+procedure printStack(numprint: integer);
+    var
+        i: integer;
+    begin
+        writeln('Stack/env pointer: ':25, (stack_base - stack[stack_pointer].offset), ' (', stack[stack_pointer].name, ')');
+        if instruction_pointer = -1 then
+            begin
+                writeln('Instruction pointer: ':25, 'No code run yet!')
+            end
+        else
+            begin
+                writeln('Instruction pointer: ':25, func_array[instruction_pointer].code_address, ' (', func_array[instruction_pointer].func_name, ')');
+            end;
             
-        end;
+        writeln('===================================================');
+        
+        {* start looping backwards through stack *}
+        for i := (stack_size - 1) downto 0 do
+            begin
+                {* stop when we've printed enough *}
+                if numprint = 0 then exit;
+                
+                printActivationRecord(stack[i]);
+                numprint := numprint - 1;                
+            end
+    end;
 
 function createFunction() : function_info;
     var
         i: integer;
         func: function_info;
+        input: string;
     
     begin
-        writeln('Enter the function name:');
+        writeln('Enter the function name: ');
         readln(func.func_name);
 
         {* get names/types of parameters *}
-        writeln('Enter the number of parameters:');
-        readln(func.num_params);        
+        func.num_params := -1;
+        while func.num_params = -1 do
+            begin
+                writeln('Enter the number of parameters: ');
+                readln(input);
+                func.num_params := StrToIntDef(input, -1);
+            end;
         setlength(func.params, func.num_params);
         for i := 0 to (func.num_params - 1) do 
         begin
-            writeln('Enter the variable name for parameter ', i+1);
+            writeln('Enter the variable name for parameter ', i+1, ': ');
             readln(func.params[i].var_name);
-            writeln('Enter the data type of ', func.params[i].var_name);
-            readln(func.params[i].var_type);
+            func.params[i].var_type := '';
+            while (func.params[i].var_type <> 'int') and (func.params[i].var_type <> 'char') do
+                begin
+                    writeln('Enter the data type of ', func.params[i].var_name, ': ');
+                    readln(func.params[i].var_type);
+                    func.params[i].var_type := LowerCase(func.params[i].var_type);
+                end;
         end;
 
         {* get names/types of local variables *}
-        writeln('Enter the number of local variables: ');
-        readln(func.num_locals);
+        func.num_locals := -1;
+        while func.num_locals = -1 do
+            begin
+                writeln('Enter the number of local variables: ');
+                readln(input);
+                func.num_locals := StrToIntDef(input, -1);
+            end;
         setlength(func.locals, func.num_locals);
         for i := 0 to (func.num_locals - 1) do 
         begin
             writeln('Enter the variable name for local var', i+1);
-            readln(func.params[i].var_name);
-            writeln('Enter the data type of ', func.params[i].var_name);
-            readln(func.params[i].var_type);
+            readln(func.locals[i].var_name);
+            func.locals[i].var_type := '';
+            while (func.locals[i].var_type <> 'int') and (func.locals[i].var_type <> 'char') do
+                begin
+                    writeln('Enter the data type of ', func.locals[i].var_name, ': ');
+                    readln(func.locals[i].var_type);
+                    func.locals[i].var_type := LowerCase(func.locals[i].var_type);
+                end;
+            writeln('Enter the value of ', func.locals[i].var_name);
+            readln(func.locals[i].var_value);
         end;
 
         {* get the function return type/value *}
-        writeln('Enter the return type of the function');
-        readln(func.return_type);
+        func.return_type := '';
+        while (func.return_type <> 'void') and (func.return_type <> 'int') and (func.return_type <> 'char') do
+            begin
+                writeln('Enter the return type of the function: ');
+                readln(func.return_type);
+                func.return_type := LowerCase(func.return_type);
+            end;
         
+        
+        {* get code address *}
+        func.code_address := 0;
+        while func.code_address = 0 do
+            begin
+                writeln('Enter the code address for the function: ');
+                readln(input);
+                func.code_address := StrToIntDef(input, 0);
+            end;
         
         createFunction := func;
     end;
 
-function callFunction(func_array: function_info_array; stack: activation_record_array; var num_functions: integer; var stack_size: integer ): activation_record_array;
+procedure callFunction();
     var
-        i, choice: integer;
+        i, localsi, choice: integer;
         param_value: string;
+        new_record: activation_record;
+        input: string;
         
     begin
-        new_stack := stack;
-
         {*Display all the functions and ask the user to choose one*}
-        writeln('Enter the number for the function you want to call');
         for i := 0 to (num_functions - 1) do
             begin
-                writeln(i:5, ' ', func_array[i].func_name );
+                writeln(i:5, ' ', func_array[i].func_name);
             end;
-        readln(choice);
+            
+        choice := -1;
+        while (choice < 0) or (choice >= num_functions) do
+            begin
+                writeln('Enter the number for the function you want to call');
+                readln(input);
+                choice := StrToIntDef(input, -1);
+            end;
 
         {* Update the new activation_record information from the users choice*}
         new_record.name := func_array[choice].func_name; 
         new_record.return_type := func_array[choice].return_type;
-
+        
+        {* store this function's name and return type in the calling function's temporary variable *}
+        stack[stack_size - 1].temporary.var_name := new_record.name + '()';
+        if new_record.return_type <> 'void' then
+            stack[stack_size - 1].temporary.var_type := new_record.return_type
+        else
+            stack[stack_size - 1].temporary.var_type := 'int (ignored)';
+        
+        {* set control_link, access_link, and return pointers *}
+        new_record.control_link := stack_size - 1;
+        new_record.access_link := 0;
+        new_record.return_address := instruction_pointer;
+        
+        {* change instruction pointer *}
+        instruction_pointer := choice;
+        
         {* get the function call argument values and assign to the local variables of the new activation_record *}
-        setlength(new_record.locals, func_array[choice].num_params);
+        new_record.num_locals := func_array[choice].num_params + func_array[choice].num_locals;
+        setlength(new_record.locals, new_record.num_locals);
+        localsi := 0;
         for i := 0 to (func_array[choice].num_params - 1) do 
             begin
                 writeln('Enter the value for parameter name ', func_array[choice].params[i].var_name, ' of data type ', func_array[choice].params[i].var_type);
                 readln(param_value);
-                new_record.locals[i].var_name := func_array[choice].params[i].var_name; 
-                new_record.locals[i].var_type := func_array[choice].params[i].var_type;  
-                new_record.locals[i].var_value := param_value;    
+                new_record.locals[localsi].var_name := func_array[choice].params[i].var_name; 
+                new_record.locals[localsi].var_type := func_array[choice].params[i].var_type;  
+                new_record.locals[localsi].var_value := param_value;    
+                localsi := localsi + 1;
             end;
+        {* add locals to activation_record *}
+        for i := 0 to (func_array[choice].num_locals - 1) do
+            begin
+                new_record.locals[localsi] := func_array[choice].locals[i]; 
+                localsi := localsi + 1;
+            end;
+            
+        {* set temporary *}
+        new_record.temporary.var_name := '?';
+        new_record.temporary.var_type := '?';
+        new_record.temporary.var_value := '?';
+
+        {* set offset and size *}
+        new_record.offset := stack[stack_size - 1].offset + stack[stack_size - 1].size;
+        new_record.size := calculateActivationRecordSize(new_record);
 
         {* Add the new activation record to the stack *}
-        setlength(new_stack, stack_size);
+        stack_size := stack_size + 1;
+        setlength(stack, stack_size);
         writeln('made it to here');
-        new_stack[stack_size - 1] := new_record;
-
-        {*set control_link, access_link, and return pointers*}
-        if (stack_size > 2) then
-            begin
-                new_stack[stack_size - 1].control_link := stack_size - 2;
-            end
-        else
-            begin
-
-                writeln('here 3: ', new_stack[stack_size - 1].name);
-                writeln(new_stack[0].name);
-
-                new_stack[stack_size - 1].control_link := 0;
-            end;
-        new_stack[stack_size - 1].access_link := 0;
-        new_stack[stack_size - 1].return_address := stack_size - 1;
-
-        new_stack[stack_size - 2].temporary.var_name := new_stack[stack_size - 1].name + '()';
-        new_stack[stack_size - 2].temporary.var_type := new_stack[stack_size - 1].return_type;
-
-        {* Return the new stack *}
-        callFunction := new_stack;
-
+        stack[stack_size - 1] := new_record;
+        
+        {* update stack pointer *}
+        stack_pointer := stack_size - 1;
     end;
 
-{* haven't even looked at this function yet -kevin *}
-function functionReturn( func_array: function_info_array; stack: activation_record_array; var num_functions: integer; var stack_size: integer): activation_record_array;
+procedure functionReturn();
     var
         return_val: string;
         
-    begin 
-        return_stack := stack;
-        {* This is the simulated function return*}
-        {* get the simulated return value of the function call *}
-        writeln('Enter a value for the function to return');
-        readln(return_val);
-        return_stack[stack_size - 2].temporary.var_value := return_val;
-        functionReturn := return_stack;
-    end;
-    
-
-
-{* calculate size based on type: int = 4, char = 1, everything else = 0 *}
-function calculateTypeSize(var_type: string): integer;
     begin
-        calculateTypeSize := 0;
-    
-        if (var_type = 'int') OR (var_type = 'integer') then
-            calculateTypeSize := 4
-        else if var_type = 'char' then
-            calculateTypeSize := 1;
-    end;
-
-{* figure out the size of an activation record *}
-function calculateActivationRecordSize(rec: activation_record): integer;
-    var
-        i, size: integer;
-    
-    {*    name: string;
-    control_link: integer;
-    access_link: integer;
-    return_address: integer;
-    ret: variable_info;
-    num_locals: integer;
-    locals: array of variable_info;
-    temporary: variable_info;  *}
-    begin
-        size := 4 + 4 + 4; {* control_link + access_link + return_address *}
-        size := size + calculateTypeSize(rec.return_type);
-        for i := 0 to rec.num_locals - 1 do
+        {* skip if no functions *}
+        if stack_size <= 1 then
             begin
-                size := size + calculateTypeSize(rec.locals[i].var_type);
+                writeln('No functions on stack!');
+                exit;
             end;
-        size := size + calculateTypeSize(rec.temporary.var_type);
+    
+        {* get the simulated return value of the function call if it isn't void *}
+        if stack[stack_size - 1].return_type <> 'void' then
+            begin
+                writeln('Enter a value for the function to return');
+                readln(return_val);
+                stack[stack_size - 2].temporary.var_value := return_val;
+            end;
+            
+        {* jump to old instruction pointer *}
+        instruction_pointer := stack[stack_size - 1].return_address;
         
-        calculateActivationRecordSize := size;
+        {* move stack pointer back *}
+        stack_pointer := stack[stack_size - 1].control_link;
+        
+        {* remove top activation record *}
+        stack_size := stack_size - 1;
+        setlength(stack, stack_size);
+    end;
+    
+{* figure out the size of an activation record *}
+function calculateActivationRecordSize(var rec: activation_record): integer;
+    begin
+        calculateActivationRecordSize := rec.num_locals * 4 + 4 + 4 + 4 + 4; {* control_link + access_link + return_address + temporary *}
     end;
 end.
