@@ -1,3 +1,8 @@
+{*
+Name: proj2.pas
+Programmers: Kevin Masterson (k.m.masterson@gmail.com), Rob Close (rob0229@gmail.com)
+*}
+
 program project2;
 uses crt, sysutils, strutils, types, menu, functions;
 

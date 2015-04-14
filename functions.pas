@@ -1,3 +1,8 @@
+{*
+Name: functions.pas
+Programmers: Kevin Masterson (k.m.masterson@gmail.com), Rob Close (rob0229@gmail.com)
+*}
+
 unit functions;
 interface
 uses sysutils, types;
